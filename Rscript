@@ -1,0 +1,287 @@
+## Removing leftovers
+rm(list=ls())
+
+## Needed packages
+library(MASS)
+library(CGPfunctions)
+library(ggpubr)
+library(effects)
+library(ggplot2)
+library(psych)
+library(rcompanion)
+library(lsr)
+library(vcd)
+library(MuMIn)
+library(olsrr)
+library(lme4)
+library(regclass)
+library(rstatix)
+library(emmeans)
+library(multcomp)
+library(postHoc)
+library(DescTools)
+library(BBmisc)
+library(heatmaply)
+library(effectsize)
+library(tidyverse)
+library(mvnormalTest)
+library(gridExtra)
+library(heplots)
+library(Rmisc)
+library(multcompView)
+library(ordinal)
+library(GLMcat)
+require(foreign)
+require(nnet)
+library(caret)
+library(gtsummary)
+library(ggeffects)
+library(marginaleffects)
+library(dplyr)
+library(magrittr)
+library(MNLpred)
+library(scales)
+library(pROC)
+library(rpart)
+library(rpart.plot)
+library(h2o)
+library(multiROC)
+library(forestplot)
+library(meta)
+library(modelsummary)
+library(glmnet)
+require(pscl)
+library(corrplot)
+library(VGAM)
+library(remotes)
+library(NBZIMM)
+library(bayesplot)
+library(rstanarm)
+library(bayestestR)
+
+## Importing dataset
+data <- read.csv("./Winter2021_FieldStudyData.csv", sep = ";")
+str(data)
+## Remove last rows
+data <- data[-c(42:47),]
+
+## Body condition measurement
+## Tarsus
+## Exclude the one with a -
+data <- data[-which(data$Tars == "-"),]
+data$Tars <- as.numeric(data$Tars)
+
+## Mass
+data$Mass
+data$Tar
+
+## Remove stm
+data <- data[-which(data$Site == "SMtn"),]
+
+## BD
+data$BodyCond <- NA
+hist(data$Tars)
+hist(sqrt(data$Mass))
+model <- lm(sqrt(Mass)~sqrt(Tars), data)
+summary(model)
+data$BodyCond <- as.data.frame(model$residuals)[,1]
+hist((data$BodyCond))
+
+## Repeatability results
+colnames(data)
+## Glucose
+glicose <- data[which(!data$Gluc2 == "-"),]
+glicose$Gluc1 <- as.numeric(glicose$Gluc1)
+glicose$Gluc2 <- as.numeric(glicose$Gluc2)
+glic_model <- lm(Gluc1 ~ Gluc2, glicose)
+summary(glic_model)
+## Highly repeatable -- 85%
+
+## Ketones
+cetona <- data[which(!data$Keto2 == "-"),]
+cetona$Keto1 <- as.numeric(cetona$Keto1)
+cetona$Keto2 <- as.numeric(cetona$Keto2)
+ket_model <- lm(Keto1 ~ Keto2, cetona)
+summary(ket_model)
+## Highly repeatable 93%
+
+## Uric Acid
+ua <- data[which(!data$UA2 == "-"),]
+ua$UA1 <- as.numeric(ua$UA1)
+ua$UA2 <- as.numeric(ua$UA2)
+ua_model <- lm(UA1 ~UA2, ua)
+summary(ua_model)
+## Highly repeatable 92%
+
+## Triglicerides
+triglicerideos <- data[which(!data$Trig2 == "-"),]
+sort(triglicerideos$Trig1)
+table(triglicerideos$Trig1)
+table(triglicerideos$Trig2)
+triglicerideos <- triglicerideos[-which(triglicerideos$Trig1 == "low" | triglicerideos$Trig2 == "low"),]
+triglicerideos$Trig1 <- as.numeric(triglicerideos$Trig1)
+triglicerideos$Trig2 <- as.numeric(triglicerideos$Trig2)
+triglicerideos_modelo <- lm(Trig1 ~Trig2, triglicerideos)
+summary(triglicerideos_modelo)
+## moderate 57%
+
+## Correlation models
+colnames(data)
+data <- data[-which(data$MeanGluc == "."),]
+data$MeanGluc <- as.numeric(data$MeanGluc)
+hist(sqrt(data$MeanGluc))
+
+data$MeanKeto <- as.numeric(data$MeanKeto)
+hist(data$MeanKeto)
+
+data$MeanUA <- as.numeric(data$MeanUA)
+hist(sqrt(data$MeanUA))
+
+data$MeanChol <- as.numeric(data$MeanChol)
+hist(data$MeanChol)
+
+data <- data[-which(data$MeanTrig == "."),]
+data$MeanTrig <- as.numeric(data$MeanTrig)
+hist(data$MeanTrig)
+
+## Age and sex
+colnames(data)
+table(data$Sex)
+data$data$Sex <- as.factor((data$data$Sex))
+table(data$Site)
+data$Site <- as.factor((data$Site))
+table(data$Pox)
+data$Pox_PA <- NA
+data[which(data$Pox == 0.0),"Pox_PA"] <- 0
+data[which(data$Pox != 0.0),"Pox_PA"] <- 1
+table(data$Pox_PA)
+data$Pox_PA <- as.factor(as.character(data$Pox_PA))
+class(data$Pox_PA)
+
+## Correlations
+colnames(data)
+levels(data$Site) <- c("Urban", "Sub-urban")
+
+## Models
+first <- cor_test(data[,c("MeanGluc", "MeanKeto")], method = "pearson")
+first
+second <- cor_test(data[,c("MeanGluc", "MeanUA")], method = "pearson")
+second
+second_2 <- lm(MeanGluc~MeanUA*Sex*Site, data)
+summary(second_2)
+third <- cor_test(data[,c("MeanGluc", "MeanTrig")], method = "pearson")
+third
+fourth <- cor_test(data[,c("MeanKeto", "MeanUA")], method = "pearson")
+fourth
+fifth <- cor_test(data[,c("MeanKeto", "MeanTrig")], method = "pearson")
+fifth
+sixth <- cor_test(data[,c("MeanUA", "MeanTrig")], method = "pearson")
+sixth
+sixth_2 <- lm(MeanUA~MeanTrig*Sex*Site, data)
+summary(sixth_2)
+
+## Plotting result
+a <- ggplot(data, aes(y = MeanGluc, x = MeanTrig)) + geom_point() + geom_smooth(method = "glm", se = T, color = "black") + theme_bw() + 
+  ylab("Mean glucose concentration (mg/dL)") + xlab("Mean triglyceride concentration (mg/dL)")
+b <- ggplot(data, aes(y = MeanUA, x = MeanTrig)) + geom_point() + geom_smooth(method = "glm", se = T, color = "black") + theme_bw() + 
+  ylab("Mean uric acid concentration (mg/dL)") + xlab("Mean triglyceride concentration (mg/dL)")
+ggarrange(a,b, ncol = 2, nrow = 1)
+
+###############################################################################################################################
+###############################################################################################################################
+###############################################################################################################################
+###############################################################################################################################
+###############################################################################################################################
+###############################################################################################################################
+###############################################################################################################################
+data$Pox_PA <- as.numeric(as.character(data$Pox_PA))
+correlations <- cor_test(data[,c("BodyCond", "Pox_PA")], method = "pearson")
+data$Pox_PA <- as.factor(as.character(data$Pox_PA))
+
+## Models
+colnames(data)
+stats_model <- lm(MeanGluc ~ Site * Sex + Pox_PA, data, na.action = na.fail)
+dredge(stats_model)
+summary(model.avg(dredge(stats_model)))
+confint(model.avg(dredge(stats_model)))
+
+stats_model_2 <- lm(MeanKeto ~ Site * Sex + Pox_PA, data, na.action = na.fail)
+dredge(stats_model_2)
+summary(model.avg(dredge(stats_model_2)))
+confint(model.avg(dredge(stats_model_2)))
+
+stats_model_3 <- lm(MeanUA ~ Site * Sex + Pox_PA, data, na.action = na.fail)
+dredge(stats_model_3)
+summary(model.avg(dredge(stats_model_3)))
+confint(model.avg(dredge(stats_model_3)))
+
+stats_model_4 <- lm(MeanTrig ~ Site * Sex + Pox_PA, data, na.action = na.fail)
+dredge(stats_model_4)
+summary(model.avg(dredge(stats_model_4)))
+confint(model.avg(dredge(stats_model_4)))
+
+## Graphs
+plotar <- data
+plotar$Pox_PA <- as.factor(plotar$Pox_PA)
+levels(plotar$Pox_PA) <- c("Uninfected", "Infected")
+levels(plotar$Site)[2] <- "Suburban"
+
+primeiro <- ggplot(plotar, aes(x = Site, y = MeanGluc)) + geom_boxplot() + theme_bw() + geom_jitter(position = position_jitter(0.2)) + xlab("Sampling location") + ylab("Mean glucose concentration (mg/dL)")
+segundo <- ggplot(plotar, aes(x = Pox_PA, y = MeanTrig)) + geom_boxplot() + theme_bw() + geom_jitter(position = position_jitter(0.2)) + xlab("Poxvirus infection occurrence") + 
+  ylab("Mean triglyceride concentration (mg/dL)")
+ggarrange(primeiro,segundo, ncol = 2)
+
+###############################################################################################################################
+###############################################################################################################################
+###############################################################################################################################
+###############################################################################################################################
+###############################################################################################################################
+###############################################################################################################################
+###############################################################################################################################
+## Plumage coloration
+males <- data[which(data$Sex == "M"),]
+males$MeanHue <- as.numeric(males$MeanHue)
+
+## Models
+colnames(males)
+## Hue
+hist(males$MeanHue)
+## Glucose
+stats_model_males <- lm(MeanGluc ~ MeanHue, males)
+stats_model_males_null <- lm(MeanGluc ~ 1, males)
+anova(stats_model_males, stats_model_males_null, test = "Chisq")
+summary(stats_model_males)
+confint(stats_model_males)
+
+## Uric acid
+stats_model_males_2 <- lm(MeanUA ~ MeanHue, males)
+stats_model_males_null_2 <- lm(MeanUA ~ 1, males)
+anova(stats_model_males_2, stats_model_males_null_2, test = "Chisq")
+summary(stats_model_males_2)
+confint(stats_model_males_2)
+
+## Triglycerides
+stats_model_males_3 <- lm(MeanTrig ~ MeanHue, males)
+stats_model_males_null_3 <- lm(MeanTrig ~ 1, males)
+anova(stats_model_males_3, stats_model_males_null_3, test = "Chisq")
+
+## Ketones
+stats_model_males_4 <- lm(MeanKeto ~ MeanHue, males)
+stats_model_males_null_4 <- lm(MeanKeto ~ 1, males)
+anova(stats_model_males_4, stats_model_males_null_4, test = "Chisq")
+
+## Plotting results
+macho <- ggplot(males, aes(y = MeanGluc, x = MeanHue)) + geom_point() + geom_smooth(method = "glm", se = T, color = "black") + theme_bw() + 
+  xlab("Male plumage hue (degrees)") + ylab("Mean glucose concentration (mg/dL)") + scale_x_continuous(breaks = c(0,5,10,15,20,25))
+macho_2 <- ggplot(males, aes(y = MeanUA, x = MeanHue)) + geom_point() + geom_smooth(method = "glm", se = T, color = "black") + theme_bw() + 
+  xlab("Male plumage hue (degrees)") + ylab("Mean uric acid concentration (mg/dL)") + scale_x_continuous(breaks = c(0,5,10,15,20,25))
+ggarrange(macho,macho_2, ncol =2)
+
+## End of code 
+###############################################################################################################################
+###############################################################################################################################
+###############################################################################################################################
+###############################################################################################################################
+###############################################################################################################################
+###############################################################################################################################
+###############################################################################################################################
