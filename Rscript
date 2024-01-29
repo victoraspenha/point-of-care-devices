@@ -93,37 +93,40 @@ colnames(data)
 glicose <- data[which(!data$Gluc2 == "-"),]
 glicose$Gluc1 <- as.numeric(glicose$Gluc1)
 glicose$Gluc2 <- as.numeric(glicose$Gluc2)
-glic_model <- lm(Gluc1 ~ Gluc2, glicose)
-summary(glic_model)
-## Highly repeatable -- 85%
+stats.data <- blandr.statistics(glicose$Gluc1 ,glicose$Gluc2, sig.level=0.95)
+summary(stats.data)
+1.96 * sqrt(2) * sqrt(mean(apply(glicose[c('Gluc1', 'Gluc2')], 1, var)))
 
 ## Ketones
 cetona <- data[which(!data$Keto2 == "-"),]
 cetona$Keto1 <- as.numeric(cetona$Keto1)
 cetona$Keto2 <- as.numeric(cetona$Keto2)
-ket_model <- lm(Keto1 ~ Keto2, cetona)
-summary(ket_model)
-## Highly repeatable 93%
+stats.data2 <- blandr.statistics(cetona$Keto1 ,cetona$Keto2, sig.level=0.95)
+summary(stats.data2)
+1.96 * sqrt(2) * sqrt(mean(apply(cetona[c('Keto1', 'Keto2')], 1, var)))
 
 ## Uric Acid
 ua <- data[which(!data$UA2 == "-"),]
 ua$UA1 <- as.numeric(ua$UA1)
 ua$UA2 <- as.numeric(ua$UA2)
-ua_model <- lm(UA1 ~UA2, ua)
-summary(ua_model)
-## Highly repeatable 92%
+stats.data3 <- blandr.statistics(log(ua$UA1),log(ua$UA2), sig.level=0.95)
+summary(stats.data3)
+1.96 * sqrt(2) * sqrt(mean(apply(ua[c('UA1', 'UA2')], 1, var)))
 
-## Triglicerides
+uric acid## Triglicerides
 triglicerideos <- data[which(!data$Trig2 == "-"),]
-sort(triglicerideos$Trig1)
-table(triglicerideos$Trig1)
-table(triglicerideos$Trig2)
 triglicerideos <- triglicerideos[-which(triglicerideos$Trig1 == "low" | triglicerideos$Trig2 == "low"),]
 triglicerideos$Trig1 <- as.numeric(triglicerideos$Trig1)
 triglicerideos$Trig2 <- as.numeric(triglicerideos$Trig2)
-triglicerideos_modelo <- lm(Trig1 ~Trig2, triglicerideos)
-summary(triglicerideos_modelo)
-## moderate 57%
+stats.data4 <- blandr.statistics(triglicerideos$Trig1 ,triglicerideos$Trig2, sig.level=0.95)
+summary(stats.data4)
+1.96 * sqrt(2) * sqrt(mean(apply(triglicerideos[c('Trig1', 'Trig2')], 1, var)))
+
+## Figures for supplemental material
+blandr.draw(glicose$Gluc1 ,glicose$Gluc2, ciDisplay = FALSE , ciShading = FALSE)
+blandr.draw(cetona$Keto1 ,cetona$Keto2, ciDisplay = FALSE , ciShading = FALSE)
+blandr.draw(ua$UA1 ,ua$UA2, ciDisplay = FALSE , ciShading = FALSE)
+blandr.draw(triglicerideos$Trig1 ,triglicerideos$Trig2, ciDisplay = FALSE , ciShading = FALSE)
 
 ## Correlation models
 colnames(data)
